@@ -10,13 +10,22 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "dotenv": "^16.4.7",
+    "axios": "^1.13.2",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
     "groq-sdk": "^0.7.0",
     "lucide-react": "^0.468.0",
+    "mongodb": "^7.0.0",
     "mongoose": "^8.8.4",
-    "nodemon": "^3.1.7",
+    "multer": "^2.0.2",
+    "nodemon": "^3.1.11",
+    "openai": "^6.9.0",
     "punycode": "^2.3.1",
+    "razorpay": "^2.9.6",
+    "sharp": "^0.34.5",
     "socket.io": "^4.8.1",
-    "uuid": "^11.0.3"
+    "uuid": "^11.1.0"
   }
 }

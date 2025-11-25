@@ -1,83 +1,110 @@
-const { Server } = require('socket.io');
-const { default: Groq } = require("groq-sdk");
-const { v4: uuidv4 } = require('uuid');
-const db = require('./db');
+
 require("dotenv").config();
+const propertyRoutes = require("./server/routes/propertyRoutes");
+const tenantRoutes = require("./server/routes/tenantRoutes.js");
+const leaseRoutes = require("./server/routes/leaseRoutes.js");
+const maintenanceRoutes = require("./server/routes/maintenanceRoutes.js");
+const dashboardRoutes = require("./server/routes/dashboardRoutes");
+const express = require("express");
 
-const io=new Server(3000,{
-    cors:{
-        origin:"*"
-    }
-})
-const messageData=[]
-const Users=new Set()
-db()
-const groq = new Groq({ apiKey: "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" });
+const cors = require("cors");
+const axios = require("axios");
+const path = require("path");
+const db = require("./db");
 
-async function getGroqChatCompletion(input) {
-    return groq.chat.completions.create({
-        messages: [
-            {
-              role: "system",
-              content: 
-                "You are an expert assistant specializing in rental management. " +
-                "Respond to all user queries as a professional rental manager. Ensure all answers are polite, clear, and professional. " +
-                "Limit your responses to 2–3 sentences.",
-            },
-            {
-              role: "user",
-              content: `The user's input is: ${input}`
-            },
-            {
-              role: "user",
-              content: 
-                "Based on the input, provide a concise and professional response addressing the user's concerns. Remove any unnecessary information.",
-            }
-        ],
+const app = express();
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
+
+// Connect DB
+db();
+
+// Property Routes
+app.use("/api/property", propertyRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/tenants", tenantRoutes);
+app.use("/api/leases", leaseRoutes);
+app.use("/api/maintenance", maintenanceRoutes);
+// Static file serving
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// GROQ AI KEY
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
+
+async function groqAI(prompt, system = "You are an AI assistant.") {
+  if (!GROQ_API_KEY) return "AI is disabled — missing API key";
+
+  try {
+    const response = await axios.post(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
         model: "llama3-8b-8192",
-        max_tokens: 50, 
-    });
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: prompt },
+        ],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${GROQ_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data.choices[0].message.content;
+  } catch (error) {
+    console.error("Groq API error:", error.message);
+    return "AI Service unavailable.";
+  }
 }
 
-io.on("connection",(socket)=>{
-   
-   console.log("client is connected with ",socket.id)
 
-   socket.on("addMessage", async (add) => {
-    console.log("Message received:", add.message);
-    
-    try {
-        const chatCompletion = await getGroqChatCompletion(add.message);
-        const botResponse = chatCompletion.choices[0]?.message?.content || "No response from chatbot.";
-        
-        const chatbotMessage = {
-            id: uuidv4(),
-            name: "Chatbot",
-            message: botResponse,
-            time: new Date().toLocaleTimeString(),
-        };
-        
-        messageData.push(add);
-        messageData.push(chatbotMessage);
-        
-        io.emit("display", add);          
-        io.emit("display", chatbotMessage); 
-    } catch (error) {
-        console.error("Error fetching chatbot response:", error);
-    }
+app.post("/api/ai/predict-rent", async (req, res) => {
+  const { location, sqft, bhk, furnishing } = req.body;
+
+  const prompt = `
+  Predict monthly rent (INR) for:
+  - Location: ${location}
+  - Area: ${sqft} sq ft
+  - BHK: ${bhk}
+  - Furnishing: ${furnishing}
+
+  Return ONLY a number.
+  `;
+
+  const output = await groqAI(prompt);
+  const price = output.match(/\d+/)?.[0] || "N/A";
+
+  res.json({ predictedRent: price });
 });
 
- 
-     socket.on("addUsers",(newUser)=>{
-        console.log("yvh")
-        Users.add(newUser)
-        console.log(Array.from(Users))
-        io.emit("giveUsers",Array.from(Users))
-    })
-    
+// API — Maintenance Categorizer
+app.post("/api/ai/categorize", async (req, res) => {
+  const { description } = req.body;
 
-   
+  const prompt = `
+  Categorize maintenance issue: "${description}"
+  Return JSON:
+  {
+    "category": "plumbing/electrical/structural/cleaning/other",
+    "risk": "low/medium/high"
+  }
+  `;
 
-})
+  const result = await groqAI(prompt);
 
-console.log("server is started http://localhost:3000")
+  try {
+    const json = JSON.parse(result.slice(result.indexOf("{"), result.lastIndexOf("}") + 1));
+    res.json(json);
+  } catch (e) {
+    res.json({ category: "other", risk: "low" });
+  }
+});
+
+// Start API Server
+app.listen(process.env.PORT || 5000, () => {
+  console.log(`API running at http://localhost:${process.env.PORT || 5000}`);
+});
