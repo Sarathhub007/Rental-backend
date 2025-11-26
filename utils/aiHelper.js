@@ -7,7 +7,7 @@ async function groqAI(prompt, system = "You are an assistant.") {
   if (GROQ_API_KEY) {
     try {
       const resp = await axios.post(
-        "https://api.groq.ai/v1/chat/completions",
+        "https://api.groq.com/openai/v1/chat/completions",
         { model: "llama3-8b-8192", messages: [{ role: "system", content: system }, { role: "user", content: prompt }], max_tokens: 80 },
         { headers: { Authorization: `Bearer ${GROQ_API_KEY}` } }
       );
