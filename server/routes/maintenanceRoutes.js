@@ -9,7 +9,7 @@ const {
 
 const router = express.Router();
 
-router.post("/", createMaintenance);
+router.post("/add", createMaintenance);
 router.get("/", getMaintenance);
 router.get("/:id", getMaintenanceById);
 router.put("/:id", updateMaintenance);

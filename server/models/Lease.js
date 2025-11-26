@@ -7,27 +7,30 @@ const leaseSchema = new mongoose.Schema(
       ref: "Tenant",
       required: true,
     },
-    propertyId: { type: String, required: true },
+
+    property: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Property",
+      required: true,
+    },
+
     startDate: { type: Date, required: true },
-    endDate: { type: Date },
+    endDate: { type: Date, required: true },
+
     rentAmount: { type: Number, required: true },
-    securityDeposit: { type: Number },
+    securityDeposit: { type: Number, default: 0 },
+
     paymentCycle: {
       type: String,
       enum: ["Monthly", "Quarterly", "Yearly"],
       default: "Monthly",
     },
+
     status: {
       type: String,
-      enum: ["Active", "Terminated"],
+      enum: ["Active", "Expired", "Terminated"],
       default: "Active",
     },
-    status: {
-  type: String,
-  enum: ["Active", "Expired", "Terminated"],
-  default: "Active"
-},
-
   },
   { timestamps: true }
 );

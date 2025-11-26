@@ -12,14 +12,24 @@ const createLease = async (req, res) => {
 
 // GET ALL
 const getLeases = async (req, res) => {
-  const leases = await Lease.find().populate("tenant");
-  res.json(leases);
+  try {
+    const leases = await Lease.find()
+      .populate("tenant")
+      .populate("property");
+
+    res.json(leases);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 };
 
 // GET ONE
 const getLease = async (req, res) => {
   try {
-    const lease = await Lease.findById(req.params.id).populate("tenant");
+    const lease = await Lease.findById(req.params.id)
+      .populate("tenant")
+      .populate("property");
+
     res.json(lease);
   } catch (err) {
     res.status(400).json({ error: err.message });
@@ -32,6 +42,7 @@ const updateLease = async (req, res) => {
     const lease = await Lease.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     });
+
     res.json(lease);
   } catch (err) {
     res.status(400).json({ error: err.message });

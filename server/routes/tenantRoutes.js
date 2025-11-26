@@ -9,7 +9,7 @@ const {
 
 const router = express.Router();
 
-router.post("/", createTenant);
+router.post("/add", createTenant);
 router.get("/", getTenants);
 router.get("/:id", getTenant);
 router.put("/:id", updateTenant);

@@ -13,7 +13,9 @@ const createMaintenance = async (req, res) => {
 // GET ALL
 const getMaintenance = async (req, res) => {
   try {
-    const requests = await Maintenance.find().populate("tenant");
+    const requests = await Maintenance.find()
+      .populate("tenant")
+      .populate("propertyId");
     res.json(requests);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -23,7 +25,9 @@ const getMaintenance = async (req, res) => {
 // GET ONE
 const getMaintenanceById = async (req, res) => {
   try {
-    const request = await Maintenance.findById(req.params.id).populate("tenant");
+    const request = await Maintenance.findById(req.params.id)
+      .populate("tenant")
+      .populate("propertyId");
     res.json(request);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -33,9 +37,11 @@ const getMaintenanceById = async (req, res) => {
 // UPDATE
 const updateMaintenance = async (req, res) => {
   try {
-    const request = await Maintenance.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const request = await Maintenance.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
     res.json(request);
   } catch (error) {
     res.status(400).json({ error: error.message });

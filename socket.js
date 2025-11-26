@@ -9,7 +9,7 @@ async function groqAI(prompt) {
     const response = await axios.post(
       "https://api.groq.com/openai/v1/chat/completions",
       {
-        model: "openai/gpt-oss-120b",   // ✅ 100% working model
+        model: "openai/gpt-oss-20b",  
         messages: [
           { role: "system", content: "You are a helpful rental management assistant." },
           { role: "user", content: prompt }
