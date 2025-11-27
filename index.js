@@ -30,6 +30,9 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/tenants", tenantRoutes);
 app.use("/api/leases", leaseRoutes);
 app.use("/api/maintenance", maintenanceRoutes);
+app.get("/", (req, res) => {
+  res.send("Backend is running");
+});
 
 // Static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
