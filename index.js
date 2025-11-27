@@ -18,7 +18,7 @@ const dashboardRoutes = require("./server/routes/dashboardRoutes");
 
 // ------------------------- EXPRESS APP -------------------------
 const app = express();
-app.use(cors());
+app.use(cors("*"));
 app.use(express.json());
 
 // Connect DB
@@ -47,10 +47,13 @@ async function groqAI(prompt, mode = "chat") {
         ? {
             model: "openai/gpt-oss-20b",
             messages: [
-              { role: "system", content: "You are a helpful rental management assistant." },
-              { role: "user", content: prompt }
+              {
+                role: "system",
+                content: "You are a helpful rental management assistant.",
+              },
+              { role: "user", content: prompt },
             ],
-            max_tokens: 200
+            max_tokens: 200,
           }
         : {
             model: "llama-3.1-8b-instant",
@@ -59,10 +62,11 @@ async function groqAI(prompt, mode = "chat") {
             messages: [
               {
                 role: "system",
-                content: "Respond ONLY with a number. No words. No labels. No explanation."
+                content:
+                  "Respond ONLY with a number. No words. No labels. No explanation.",
               },
-              { role: "user", content: prompt }
-            ]
+              { role: "user", content: prompt },
+            ],
           };
 
     const response = await axios.post(
@@ -143,7 +147,7 @@ Furnishing: ${furnishing}
 
     res.json({
       price: rent || "N/A",
-      raw: output
+      raw: output,
     });
   } catch (err) {
     res.status(500).json({ error: "Prediction failed", details: err.message });
@@ -166,7 +170,9 @@ Return JSON:
   const result = await groqAI(prompt, "chat");
 
   try {
-    const json = JSON.parse(result.slice(result.indexOf("{"), result.lastIndexOf("}") + 1));
+    const json = JSON.parse(
+      result.slice(result.indexOf("{"), result.lastIndexOf("}") + 1)
+    );
     res.json(json);
   } catch (e) {
     res.json({ category: "other", risk: "low" });
